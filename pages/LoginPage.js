@@ -11,7 +11,7 @@ const LoginScreen = () => {
   const handleLogin = async () => {
     try {
       
-      const response = await axios.post('http://votre-api-strapi.com/auth/local', {
+      const response = await axios.post('https://tfe-back.onrender.com/api/auth/login', {
         identifier: email,
         password: password,
       });
