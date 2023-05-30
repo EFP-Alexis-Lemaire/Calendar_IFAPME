@@ -15,7 +15,7 @@ const FormPage = () => {
       return;
     }
     try {
-      const response = await axios.get(`STRAPI ?email=${email}`);
+      const response = await axios.get(`https://tfe-back.onrender.com/api/auth/login=${email}`);
       if (response.data.length > 0) {
         Alert.alert('Error', 'Email already exists');
         return;
