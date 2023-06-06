@@ -1,71 +1,99 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
-import axios from 'axios';
+import { View, Text, TextInput, Button, Alert } from 'react-native';
+import { Calendar } from 'react-native-calendars';
+
 
 const FormPage = () => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const { scheduleItem } = route.params;
+  const [selectedDate, setSelectedDate] = useState(scheduleItem.date);
+  const [location, setLocation] = useState(scheduleItem.location);
+  const [classroom, setClassroom] = useState(scheduleItem.classroom);
+  const [showCalendar, setShowCalendar] = useState(false);
 
-  const handleRegister = async () => {
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return;
-    }
-    try {
-      const response = await axios.get(`https://tfe-back.onrender.com/api/auth/login=${email}`);
-      if (response.data.length > 0) {
-        Alert.alert('Error', 'Email already exists');
-        return;
-      }
-    } catch (error) {
-      console.log(error);
-      Alert.alert('Error', 'An error occurred while checking email');
-      return;
-    }
-    try {
-      const response = await axios.post(`STRAPI`, {
-        username: email,
-        email,
-        password,
-        firstName,
-        lastName
+  const handleDateSelect = (date) => {
+    setSelectedDate(date.dateString);
+    setShowCalendar(false);
+  };
+
+  const handleSave = () => {
+    fetch('https://tfe-back.onrender.com/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        selectedDate,
+        location,
+        classroom,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        Alert.alert('Success', 'Les modifications ont été enregistrées avec succès.');
+        navigation.navigate('HistoryPage');
+      })
+      .catch((error) => {
+        console.error(error);
+        Alert.alert('Erreur', "Une erreur s'est produite lors de l'enregistrement des modifications.");
       });
+  };
 
-      if (response.status === 200) {
-        Alert.alert('Success', 'Registration successful');
-        navigation.navigate('LoginPage');
-      }
-    } catch (error) {
-      console.log(error);
-      Alert.alert('Error', 'An error occurred while registering');
-    }
-  };return (
-    <View>
-      
-      <Text>First Name</Text>
-      <TextInput value={firstName} onChangeText={setFirstName} />
+  const handleDelete = () => {
+    fetch('https://tfe-back.onrender.com/api/auth/login', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        selectedDate,
+        location,
+        classroom,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        Alert.alert('Success', 'L\'entrée a été supprimée avec succès.');
+        navigation.navigate('HistoryPage');
+      })
+      .catch((error) => {
+        console.error(error);
+        Alert.alert('Erreur', "Une erreur s'est produite lors de la suppression de l'entrée.");
+      });
+  };
 
-      <Text>Last Name</Text>
-      <TextInput value={lastName} onChangeText={setLastName} />
+  return (
+    <View style={{ flex: 1, padding: 16 }}>
+      <Text>Date:</Text>
+      <Button title="Sélectionner la date" onPress={() => setShowCalendar(true)} />
+      {showCalendar && (
+        <Calendar
+          onDayPress={handleDateSelect}
+          markedDates={{ [selectedDate]: { selected: true } }}
+        />
+      )}
 
-      <Text>Email</Text>
-      <TextInput value={email} onChangeText={setEmail} />
+      <Text>Lieu:</Text>
+      <TextInput
+        value={location}
+        onChangeText={setLocation}
+        style={{ height: 40, borderColor: 'gray', borderWidth: 1, marginBottom: 12 }}
+      />
 
-      <Text>Password</Text>
-      <TextInput value={password} onChangeText={setPassword} secureTextEntry={true} />
+      <Text>Classe:</Text>
+      <TextInput
+        value={classroom}
+        onChangeText={setClassroom}
+        style={{ height: 40, borderColor: 'gray', borderWidth: 1, marginBottom: 12 }}
+      />
 
-      <Text>Confirm Password</Text>
-      <TextInput value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry={true} />
-
-      <TouchableOpacity onPress={handleRegister}>
-        <Text>Create Account</Text>
-      </TouchableOpacity>
+      <Button title="Modifier" onPress={handleSave} />
+      <Button title="Supprimer" onPress={handleDelete} />
     </View>
   );
 };
+
 
 export default FormPage;
   

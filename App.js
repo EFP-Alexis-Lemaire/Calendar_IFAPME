@@ -1,40 +1,83 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import LoginPage from './pages/LoginPage';
-import ProfilePage from './pages/LoginPage';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import LoginScreen from './pages/LoginPage';
+import ProfilePage from './pages/ProfilePage';
 import FormPage from './pages/FormPage';
 import HistoryPage from './pages/HistoryPage';
 import TabBar from './component/TabBar';
+import RegistrationPage from './pages/RegistrationPage';
+
+const Stack = createStackNavigator();
 
 const App = () => {
-  const [activeTab, setActiveTab] = useState(1); // Défaut : activeTab = 1 pour afficher la page du profil après la connexion
+  const [activeTab, setActiveTab] = useState(1);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [token, setToken] = useState('');
 
-  const handleLogin = () => {
+  const handleLogin = (token) => {
     setIsLoggedIn(true);
+    setToken(token);
   };
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 0:
-        return <LoginPage handleLogin={handleLogin} />;
-      case 1:
-        return <ProfilePage />;
-      case 2:
-        return <FormPage />;
-      case 3:
-        return <HistoryPage />;
-      default:
-        return null;
-    }
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setToken('');
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      {!isLoggedIn && <LoginPage handleLogin={handleLogin} />}
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen
+          name="Login"
+          options={{ headerShown: false }}
+          initialParams={{
+            handleLoginCallback: handleLogin,
+            setToken: setToken,
+          }}
+        >
+          {(props) => (
+            <LoginScreen {...props} handleLoginCallback={handleLogin} setToken={setToken} />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen
+          name="Registration"
+          component={RegistrationPage}
+          options={{ headerShown: false }}
+        />
+
+        {isLoggedIn ? (
+          <>
+            <Stack.Screen
+              name="Profile"
+              component={ProfilePage}
+              options={{ headerShown: false }}
+              initialParams={{
+                token: token,
+                handleLogout: handleLogout,
+              }}
+            />
+            <Stack.Screen
+              name="Form"
+              component={FormPage}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="History"
+              component={HistoryPage}
+              options={{ headerShown: false }}
+            />
+          </>
+        ) : (
+          <>
+            {/* Reste du code pour les écrans lorsqu'un utilisateur n'est pas connecté */}
+          </>
+        )}
+      </Stack.Navigator>
       {isLoggedIn && <TabBar activeTab={activeTab} setActiveTab={setActiveTab} />}
-      {isLoggedIn && renderContent()}
-    </View>
+    </NavigationContainer>
   );
 };
 
