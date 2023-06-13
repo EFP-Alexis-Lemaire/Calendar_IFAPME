@@ -1,90 +1,189 @@
-import React, { useState } from 'react';
-import { View, Text, Button, Alert, Platform } from 'react-native';
-import { Calendar } from 'react-native-calendars';
-import DatePicker from '@react-native-community/datetimepicker';
+import React, { useState, useEffect } from 'react';
+import { View, ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
 
-const ChangePage = ({ route, navigation }) => {
-  const { scheduleItem } = route.params;
-  const [selectedDate, setSelectedDate] = useState(scheduleItem.date);
-  const [selectedTime, setSelectedTime] = useState(scheduleItem.time || '');
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+const FormPage = ({ navigation }) => {
+  const [scheduleData, setScheduleData] = useState([]);
 
-  const handleDateSelect = (date) => {
-    setSelectedDate(date.dateString);
-    setShowCalendar(false);
+  useEffect(() => {
+    fetch('https://tfe-back.onrender.com/api/calendar')
+      .then(response => response.json())
+      .then(data => setScheduleData(data))
+      .catch(error => console.error(error));
+  }, []);
+
+  const handleScheduleItemClick = (scheduleItem) => {
+    navigation.navigate('Change', { scheduleItem });
   };
 
-  const handleTimeSelect = () => {
-    setShowTimePicker(true);
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('fr-FR', {
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric'
+    });
   };
 
-  const handleTimeChange = (event, selectedTime) => {
-    if (selectedTime) {
-      const formattedTime = new Date(selectedTime).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-      setSelectedTime(formattedTime);
-    }
-
-    setShowTimePicker(false);
+  const isLessonExpired = (dateString) => {
+    const currentDate = new Date();
+    const lessonDate = new Date(dateString);
+    return lessonDate < currentDate;
   };
 
-  const handleSave = () => {
-    fetch(`https://tfe-back.onrender.com/api/calendar/${scheduleItem.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        lessonNewDate: selectedDate,
-        lessonNewTime: selectedTime,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-        Alert.alert('Succès', 'Les modifications ont été enregistrées avec succès.');
-        navigation.navigate('HistoryPage');
-      })
-      .catch((error) => {
-        console.error(error);
-        Alert.alert('Erreur', "Une erreur s'est produite lors de l'enregistrement des modifications.");
-      });
-  };
+  const sortedUpcomingLessons = scheduleData
+    .filter((scheduleItem) => !isLessonExpired(scheduleItem.lessonDate))
+    .sort((a, b) => new Date(a.lessonDate) - new Date(b.lessonDate));
+
+  const sortedCompletedLessons = scheduleData
+    .filter((scheduleItem) => isLessonExpired(scheduleItem.lessonDate))
+    .sort((a, b) => new Date(b.lessonDate) - new Date(a.lessonDate));
 
   return (
-    <View style={{ flex: 1, padding: 16 }}>
-      <Text>Date:</Text>
-      <Button title="Sélectionner la date" onPress={() => setShowCalendar(true)} />
-      {showCalendar && (
-        <Calendar
-          onDayPress={handleDateSelect}
-          markedDates={{ [selectedDate]: { selected: true } }}
-        />
-      )}
-
-      <Text>Heure:</Text>
-      <Button title="Sélectionner l'heure" onPress={handleTimeSelect} />
-      {showTimePicker && (
-        <DatePicker
-          value={new Date()}
-          mode="time"
-          is24Hour
-          display="default"
-          onChange={handleTimeChange}
-        />
-      )}
-      {selectedTime ? (
-        <Text style={{ marginTop: 8 }}>{selectedTime}</Text>
-      ) : (
-        <Text style={{ marginTop: 8 }}>Aucune heure sélectionnée</Text>
-      )}
-
-      <Button title="Modifier" onPress={handleSave} />
+    <View style={styles.container}>
+      <View style={styles.profileContainer}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Planning des cours</Text>
+        </View>
+        <View style={styles.contentContainer}>
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>Prochains cours</Text>
+            <ScrollView style={styles.scrollContainer1}>
+              {sortedUpcomingLessons.map((scheduleItem) => (
+                <TouchableOpacity
+                  key={scheduleItem.id}
+                  style={styles.lessonContainer}
+                  onPress={() => handleScheduleItemClick(scheduleItem)}
+                >
+                  <Text style={styles.date}>
+                    Date du cours :
+                    {formatDate(scheduleItem.lessonDate)}
+                  </Text>
+                  <Text style={styles.location}>Lieux : {scheduleItem.lessonLocation}</Text>
+                  <Text style={styles.className}>Nom du cours : {scheduleItem.lessonName}</Text>
+                  {scheduleItem.lessonNewDate && (
+                    <Text style={styles.newDate}> Nouvelle date : {scheduleItem.lessonNewDate}</Text>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>Cours terminés</Text>
+            <ScrollView style={styles.scrollContainer2}>
+              {sortedCompletedLessons.map((scheduleItem) => (
+                <TouchableOpacity
+                  key={scheduleItem.id}
+                  style={styles.lessonContainer}
+                  onPress={() => handleScheduleItemClick(scheduleItem)}
+                  disabled={true}
+                >
+                  <Text style={styles.date}>
+                    Date du cours :
+                    {formatDate(scheduleItem.lessonDate)}
+                  </Text>
+                  <Text style={styles.location}>Lieux : {scheduleItem.lessonLocation}</Text>
+                  <Text style={styles.className}>Nom du cours : {scheduleItem.lessonName}</Text>
+                  {scheduleItem.lessonNewDate && (
+                    <Text style={styles.newDate}>Nouvelle date : {scheduleItem.lessonNewDate}</Text>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </View>
     </View>
   );
 };
 
-export default ChangePage;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f9ff',
+  },
+  profileContainer: {
+    width: '80%',
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#6750A4',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 5,
+    marginTop: 150, // Ajout de la marge supérieure pour le header
+    marginBottom: 110,
+    padding: 20,
+  },
+  header: {
+    backgroundColor: '#6750A4',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginBottom: 20,
+
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#fff',
+  },
+  contentContainer: {
+
+  },
+  sectionContainer: {
+    marginBottom: 20,
+  },
+  scrollContainer1: {
+    height: '55%'
+  },
+  scrollContainer2: {
+    height: '20%'
+  },
+  lessonContainer: {
+    width: '100%',
+    marginBottom: 20,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#6750A4',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 5,
+    padding: 10,
+  },
+  date: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  location: {
+    fontSize: 14,
+    marginBottom: 5,
+  },
+  className: {
+    fontSize: 14,
+    marginBottom: 5,
+
+  },
+  newDate: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    color: 'red'
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+});
+
+export default FormPage;
