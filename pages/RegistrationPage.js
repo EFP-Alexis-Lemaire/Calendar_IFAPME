@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
-import { Button } from 'react-native-paper';
+import { View, StyleSheet } from 'react-native';
+import { TextInput, Button, Text } from 'react-native-paper';
+
 import { useNavigation } from '@react-navigation/native';
 
 import axios from 'axios';
@@ -35,6 +36,8 @@ const Registration = () => {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Création de compte</Text>
+
       <TextInput
         style={styles.input}
         placeholder="Nom d'utilisateur"
@@ -91,6 +94,12 @@ const styles = StyleSheet.create({
   },
   buttonLabel: {
     fontSize: 16,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 25,
   },
 });
 

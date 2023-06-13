@@ -6,6 +6,7 @@ import LoginScreen from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import FormPage from './pages/FormPage';
 import HistoryPage from './pages/HistoryPage';
+import ChangePage from './pages/ChangePage';
 import TabBar from './component/TabBar';
 import RegistrationPage from './pages/RegistrationPage';
 
@@ -68,6 +69,17 @@ const App = () => {
               name="History"
               component={HistoryPage}
               options={{ headerShown: false }}
+              initialParams={{
+                token: token,
+              }}
+            />
+            <Stack.Screen
+              name="Change"
+              component={ChangePage}
+              options={{ headerShown: false }}
+              initialParams={{
+                token: token,
+              }}
             />
           </>
         ) : (

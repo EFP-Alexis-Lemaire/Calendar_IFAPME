@@ -31,8 +31,10 @@ const LoginScreen = ({ handleLoginCallback, setToken }) => {
   const handleRegistration = () => {
     navigation.navigate('Registration');
   };
+
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Page de connexion</Text>
       <TextInput
         label="Email"
         value={email}
@@ -61,6 +63,12 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     justifyContent: 'center',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 25,
   },
   input: {
     marginBottom: 16,

@@ -1,34 +1,32 @@
 import React, { useState } from 'react';
-import { View, Text, Button, Alert, Platform } from 'react-native';
+import { View, Text, Button, Alert, TimePickerAndroid } from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import DatePicker from '@react-native-community/datetimepicker';
 
 const ChangePage = ({ route, navigation }) => {
   const { scheduleItem } = route.params;
   const [selectedDate, setSelectedDate] = useState(scheduleItem.date);
-  const [selectedTime, setSelectedTime] = useState(scheduleItem.time || '');
+  const [selectedTime, setSelectedTime] = useState(scheduleItem.time);
   const [showCalendar, setShowCalendar] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
 
   const handleDateSelect = (date) => {
     setSelectedDate(date.dateString);
     setShowCalendar(false);
   };
 
-  const handleTimeSelect = () => {
-    setShowTimePicker(true);
-  };
-
-  const handleTimeChange = (event, selectedTime) => {
-    if (selectedTime) {
-      const formattedTime = new Date(selectedTime).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
+  const handleTimeSelect = async () => {
+    try {
+      const { action, hour, minute } = await TimePickerAndroid.open({
+        is24Hour: true,
       });
-      setSelectedTime(formattedTime);
-    }
 
-    setShowTimePicker(false);
+      if (action !== TimePickerAndroid.dismissedAction) {
+        const formattedHour = String(hour).padStart(2, '0');
+        const formattedMinute = String(minute).padStart(2, '0');
+        setSelectedTime(`${formattedHour}:${formattedMinute}`);
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleSave = () => {
@@ -67,20 +65,7 @@ const ChangePage = ({ route, navigation }) => {
 
       <Text>Heure:</Text>
       <Button title="Sélectionner l'heure" onPress={handleTimeSelect} />
-      {showTimePicker && (
-        <DatePicker
-          value={new Date()}
-          mode="time"
-          is24Hour
-          display="default"
-          onChange={handleTimeChange}
-        />
-      )}
-      {selectedTime ? (
-        <Text style={{ marginTop: 8 }}>{selectedTime}</Text>
-      ) : (
-        <Text style={{ marginTop: 8 }}>Aucune heure sélectionnée</Text>
-      )}
+      <Text style={{ marginTop: 8 }}>{selectedTime}</Text>
 
       <Button title="Modifier" onPress={handleSave} />
     </View>
