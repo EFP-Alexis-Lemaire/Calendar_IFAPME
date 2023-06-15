@@ -4,6 +4,13 @@ import { View, ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-nati
 const FormPage = ({ navigation }) => {
   const [scheduleData, setScheduleData] = useState([]);
 
+  const handleRefresh = () => {
+    fetch('https://tfe-back.onrender.com/api/calendar')
+      .then(response => response.json())
+      .then(data => setScheduleData(data))
+      .catch(error => console.error(error));
+  };
+
   useEffect(() => {
     fetch('https://tfe-back.onrender.com/api/calendar')
       .then(response => response.json())
@@ -44,7 +51,10 @@ const FormPage = ({ navigation }) => {
     <View style={styles.container}>
       <View style={styles.profileContainer}>
         <View style={styles.header}>
-          <Text style={styles.title}>Planning des cours</Text>
+          <Text style={styles.title}>Planning des cours</Text>          
+          <TouchableOpacity onPress={handleRefresh}>
+            <Text style={styles.refreshButton}>Actualiser</Text>
+          </TouchableOpacity>
         </View>
         <View style={styles.contentContainer}>
           <View style={styles.sectionContainer}>
@@ -63,7 +73,7 @@ const FormPage = ({ navigation }) => {
                   <Text style={styles.location}>Lieux : {scheduleItem.lessonLocation}</Text>
                   <Text style={styles.className}>Nom du cours : {scheduleItem.lessonName}</Text>
                   {scheduleItem.lessonNewDate && (
-                    <Text style={styles.newDate}> Nouvelle date : {scheduleItem.lessonNewDate}</Text>
+                    <Text style={styles.newDate}> Nouvelle date : {formatDate(scheduleItem.lessonNewDate)}</Text>
                   )}
                 </TouchableOpacity>
               ))}
@@ -86,7 +96,7 @@ const FormPage = ({ navigation }) => {
                   <Text style={styles.location}>Lieux : {scheduleItem.lessonLocation}</Text>
                   <Text style={styles.className}>Nom du cours : {scheduleItem.lessonName}</Text>
                   {scheduleItem.lessonNewDate && (
-                    <Text style={styles.newDate}>Nouvelle date : {scheduleItem.lessonNewDate}</Text>
+                    <Text style={styles.newDate}>Nouvelle date : {formatDate(scheduleItem.lessonNewDate)}</Text>
                   )}
                 </TouchableOpacity>
               ))}
@@ -106,7 +116,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f9ff',
   },
   profileContainer: {
-    width: '80%',
+    width: '90%',
     borderRadius: 10,
     backgroundColor: '#fff',
     borderWidth: 1,
@@ -116,9 +126,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 2,
     elevation: 5,
-    marginTop: 150, // Ajout de la marge supérieure pour le header
+    marginTop: 150, 
     marginBottom: 110,
-    padding: 20,
+
   },
   header: {
     backgroundColor: '#6750A4',
@@ -135,16 +145,16 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   contentContainer: {
-
+    padding: 15,
   },
   sectionContainer: {
     marginBottom: 20,
   },
   scrollContainer1: {
-    height: '55%'
+    height: '50%'
   },
   scrollContainer2: {
-    height: '20%'
+    height: '25%'
   },
   lessonContainer: {
     width: '100%',
@@ -183,6 +193,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 10,
+  },
+  refreshButton: {
+    fontSize: 16,
+    color: '#fff',
+    marginBottom: 10,
+    textDecorationLine: 'underline',
   },
 });
 

@@ -1,33 +1,19 @@
 import React, { useState } from 'react';
-import { View, Text, Button, Alert, TimePickerAndroid } from 'react-native';
+import { View, Text, Alert, TouchableOpacity, StyleSheet } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 
 const ChangePage = ({ route, navigation }) => {
   const { scheduleItem } = route.params;
   const [selectedDate, setSelectedDate] = useState(scheduleItem.date);
-  const [selectedTime, setSelectedTime] = useState(scheduleItem.time);
-  const [showCalendar, setShowCalendar] = useState(false);
 
   const handleDateSelect = (date) => {
     setSelectedDate(date.dateString);
-    setShowCalendar(false);
   };
 
-  const handleTimeSelect = async () => {
-    try {
-      const { action, hour, minute } = await TimePickerAndroid.open({
-        is24Hour: true,
-      });
-
-      if (action !== TimePickerAndroid.dismissedAction) {
-        const formattedHour = String(hour).padStart(2, '0');
-        const formattedMinute = String(minute).padStart(2, '0');
-        setSelectedTime(`${formattedHour}:${formattedMinute}`);
-      }
-    } catch (error) {
-      console.error(error);
-    }
+  const backToForm = () => {
+    navigation.navigate('Form');
   };
+
 
   const handleSave = () => {
     fetch(`https://tfe-back.onrender.com/api/calendar/${scheduleItem.id}`, {
@@ -37,14 +23,13 @@ const ChangePage = ({ route, navigation }) => {
       },
       body: JSON.stringify({
         lessonNewDate: selectedDate,
-        lessonNewTime: selectedTime,
       }),
     })
       .then((response) => response.json())
       .then((data) => {
         console.log(data);
         Alert.alert('Succès', 'Les modifications ont été enregistrées avec succès.');
-        navigation.navigate('HistoryPage');
+        navigation.navigate('Form');
       })
       .catch((error) => {
         console.error(error);
@@ -53,23 +38,63 @@ const ChangePage = ({ route, navigation }) => {
   };
 
   return (
-    <View style={{ flex: 1, padding: 16 }}>
-      <Text>Date:</Text>
-      <Button title="Sélectionner la date" onPress={() => setShowCalendar(true)} />
-      {showCalendar && (
-        <Calendar
-          onDayPress={handleDateSelect}
-          markedDates={{ [selectedDate]: { selected: true } }}
-        />
-      )}
-
-      <Text>Heure:</Text>
-      <Button title="Sélectionner l'heure" onPress={handleTimeSelect} />
-      <Text style={{ marginTop: 8 }}>{selectedTime}</Text>
-
-      <Button title="Modifier" onPress={handleSave} />
+    <View style={styles.container}>
+      <Text style={styles.title}>Nouvelle Date</Text>
+      <Calendar style={styles.calendar}
+        onDayPress={handleDateSelect}
+        markedDates={{ [selectedDate]: { selected: true } }}
+      />
+      <View style={styles.buttonLayout}>
+        <TouchableOpacity style={styles.buttonReturn} onPress={backToForm} >
+          <Text style={styles.buttonTextReturn}>Retour</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handleSave} >
+          <Text style={styles.buttonText}>Modifier</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 24,
+    marginBottom: 10,
+    color: '#6750A4',
+    marginBottom: 5,
+  },
+  buttonLayout: {
+    flexDirection: 'row',
+  },
+  buttonReturn: {
+    borderStyle: 'solid', 
+    borderWidth: 2,
+    borderColor: '#6750A4',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 15,
+    marginRight: 10,
+  },
+  button: {
+    backgroundColor: '#6750A4',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 15,
+    marginRight: 10,
+  },
+  buttonText: {
+    color: '#fff',
+  },
+  buttonTextReturn: {
+    color: '#6750A4',
+  },
+});
 
 export default ChangePage;

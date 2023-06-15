@@ -13,11 +13,12 @@ import RegistrationPage from './pages/RegistrationPage';
 const Stack = createStackNavigator();
 
 const App = () => {
-  const [activeTab, setActiveTab] = useState(1);
+  const [activeTab, setActiveTab] = useState(2);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [token, setToken] = useState('');
 
   const handleLogin = (token) => {
+    setActiveTab(2)
     setIsLoggedIn(true);
     setToken(token);
   };

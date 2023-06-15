@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import Waiting from '../component/waiting';
 
 const HistoryPage = () => {
   const [lessons, setLessons] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchLessons();
@@ -10,6 +12,7 @@ const HistoryPage = () => {
 
   const fetchLessons = async () => {
     try {
+      setLoading(true); 
       const response = await fetch('https://tfe-back.onrender.com/api/calendar', {
         method: 'GET',
       });
@@ -17,6 +20,8 @@ const HistoryPage = () => {
       setLessons(data);
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false); 
     }
   };
 
@@ -26,7 +31,6 @@ const HistoryPage = () => {
         method: 'DELETE',
       });
       if (response.ok) {
-        // Suppression réussie, mettre à jour la liste des cours
         fetchLessons();
       }
     } catch (error) {
@@ -48,26 +52,30 @@ const HistoryPage = () => {
           </TouchableOpacity>
         </View>
         <ScrollView>
-          {lessons.map((lesson) => (
-            <View key={lesson.id} style={styles.lessonContainer}>
-              {lesson.lessonNewDate !== null && (
-                <View>
-                  <Text style={styles.lessonName}>Nom du cours: {lesson.lessonName}</Text>
-                  <Text style={styles.lessonLocation}>Lieu: {lesson.lessonLocation}</Text>
-                  <Text style={styles.lessonClass}>Classe: {lesson.lessonClass}</Text>
-                  <Text style={styles.lessonDate}>Date d'origine: {new Date(lesson.lessonDate).toLocaleDateString()} {new Date(lesson.lessonDate).toLocaleTimeString()}</Text>
-                  <Text style={[styles.lessonNewDate, lesson.lessonNewDate && styles.modifiedLessonDate]}>Date après modification: {new Date(lesson.lessonNewDate).toLocaleDateString()} {new Date(lesson.lessonNewDate).toLocaleTimeString()}</Text>
-                  <TouchableOpacity onPress={() => deleteNewDate(lesson.id)}>
-                    <Text style={styles.deleteButton}>Supprimer le changement d'horaire</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          ))}
+          {loading ? (
+            <Waiting />
+          ) : (
+            lessons.map((lesson) => (
+              <View key={lesson.id} style={styles.lessonContainer}>
+                {lesson.lessonNewDate !== null && (
+                  <View>
+                    <Text style={styles.lessonName}>Nom du cours: {lesson.lessonName}</Text>
+                    <Text style={styles.lessonLocation}>Lieu: {lesson.lessonLocation}</Text>
+                    <Text style={styles.lessonClass}>Classe: {lesson.lessonClass}</Text>
+                    <Text style={styles.lessonDate}>Date d'origine: {new Date(lesson.lessonDate).toLocaleDateString()} {new Date(lesson.lessonDate).toLocaleTimeString()}</Text>
+                    <Text style={[styles.lessonNewDate, lesson.lessonNewDate && styles.modifiedLessonDate]}>Date après modification: {new Date(lesson.lessonNewDate).toLocaleDateString()} {new Date(lesson.lessonNewDate).toLocaleTimeString()}</Text>
+                    <TouchableOpacity onPress={() => deleteNewDate(lesson.id)}>
+                      <Text style={styles.deleteButton}>Supprimer le changement d'horaire</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            ))
+          )}
         </ScrollView>
       </View>
     </View>
-  );
+  );  
 };
 
 const styles = StyleSheet.create({
@@ -78,7 +86,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f9ff',
   },
   profileContainer: {
-    width: '80%',
+    width: '90%',
     borderRadius: 10,
     backgroundColor: '#fff',
     borderWidth: 1,
