@@ -1,18 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
 
-const FormPage = ({ navigation }) => {
+const FormPage = ({ route, navigation }) => {
   const [scheduleData, setScheduleData] = useState([]);
+  const { token } = route.params;
 
   const handleRefresh = () => {
-    fetch('https://tfe-back.onrender.com/api/calendar')
+    fetch('https://tfe-back.onrender.com/api/calendar', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
       .then(response => response.json())
       .then(data => setScheduleData(data))
       .catch(error => console.error(error));
   };
 
   useEffect(() => {
-    fetch('https://tfe-back.onrender.com/api/calendar')
+    fetch('https://tfe-back.onrender.com/api/calendar', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
       .then(response => response.json())
       .then(data => setScheduleData(data))
       .catch(error => console.error(error));

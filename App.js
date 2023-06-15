@@ -65,6 +65,9 @@ const App = () => {
               name="Form"
               component={FormPage}
               options={{ headerShown: false }}
+              initialParams={{
+                token: token,
+              }}
             />
             <Stack.Screen
               name="History"

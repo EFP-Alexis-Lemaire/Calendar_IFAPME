@@ -3,6 +3,7 @@ import { View, Text, Alert, TouchableOpacity, StyleSheet } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 
 const ChangePage = ({ route, navigation }) => {
+  const { token } = route.params;
   const { scheduleItem } = route.params;
   const [selectedDate, setSelectedDate] = useState(scheduleItem.date);
 
@@ -20,12 +21,18 @@ const ChangePage = ({ route, navigation }) => {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         lessonNewDate: selectedDate,
       }),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (response.status === 401) {
+          throw new Error('Unauthorized');
+        }
+        return response.json();
+      })
       .then((data) => {
         console.log(data);
         Alert.alert('Succès', 'Les modifications ont été enregistrées avec succès.');
@@ -33,9 +40,15 @@ const ChangePage = ({ route, navigation }) => {
       })
       .catch((error) => {
         console.error(error);
-        Alert.alert('Erreur', "Une erreur s'est produite lors de l'enregistrement des modifications.");
+        if (error.message === 'Unauthorized') {
+          // Gérer l'erreur 401 ici
+          Alert.alert('Erreur', 'Le token est manquant ou invalide.');
+        } else {
+          Alert.alert('Erreur', "Une erreur s'est produite lors de l'enregistrement des modifications.");
+        }
       });
   };
+
 
   return (
     <View style={styles.container}>
@@ -72,7 +85,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   buttonReturn: {
-    borderStyle: 'solid', 
+    borderStyle: 'solid',
     borderWidth: 2,
     borderColor: '#6750A4',
     padding: 10,

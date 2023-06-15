@@ -2,26 +2,31 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import Waiting from '../component/waiting';
 
-const HistoryPage = () => {
+const HistoryPage = ({route}) => {
+  const { token } = route.params;
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  console.log(lessons);
   useEffect(() => {
     fetchLessons();
   }, []);
 
   const fetchLessons = async () => {
     try {
-      setLoading(true); 
+      setLoading(true);
       const response = await fetch('https://tfe-back.onrender.com/api/calendar', {
         method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
       const data = await response.json();
       setLessons(data);
     } catch (error) {
       console.error(error);
     } finally {
-      setLoading(false); 
+      setLoading(false);
     }
   };
 
@@ -29,6 +34,9 @@ const HistoryPage = () => {
     try {
       const response = await fetch(`https://tfe-back.onrender.com/api/calendar/${id}/newdate`, {
         method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
       if (response.ok) {
         fetchLessons();
@@ -55,28 +63,37 @@ const HistoryPage = () => {
           {loading ? (
             <Waiting />
           ) : (
-            lessons.map((lesson) => (
-              <View key={lesson.id} style={styles.lessonContainer}>
-                {lesson.lessonNewDate !== null && (
-                  <View>
-                    <Text style={styles.lessonName}>Nom du cours: {lesson.lessonName}</Text>
-                    <Text style={styles.lessonLocation}>Lieu: {lesson.lessonLocation}</Text>
-                    <Text style={styles.lessonClass}>Classe: {lesson.lessonClass}</Text>
-                    <Text style={styles.lessonDate}>Date d'origine: {new Date(lesson.lessonDate).toLocaleDateString()} {new Date(lesson.lessonDate).toLocaleTimeString()}</Text>
-                    <Text style={[styles.lessonNewDate, lesson.lessonNewDate && styles.modifiedLessonDate]}>Date après modification: {new Date(lesson.lessonNewDate).toLocaleDateString()} {new Date(lesson.lessonNewDate).toLocaleTimeString()}</Text>
-                    <TouchableOpacity onPress={() => deleteNewDate(lesson.id)}>
-                      <Text style={styles.deleteButton}>Supprimer le changement d'horaire</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-            ))
+            <View>
+              {lessons.map((lesson) => {
+                if (lesson.lessonNewDate !== null) {
+                  return (
+                    <View key={lesson.id} style={styles.lessonContainer}>
+                      <Text style={styles.lessonName}>Nom du cours: {lesson.lessonName}</Text>
+                      <Text style={styles.lessonLocation}>Lieu: {lesson.lessonLocation}</Text>
+                      <Text style={styles.lessonClass}>Classe: {lesson.lessonClass}</Text>
+                      <Text style={styles.lessonDate}>Date d'origine: {new Date(lesson.lessonDate).toLocaleDateString()} {new Date(lesson.lessonDate).toLocaleTimeString()}</Text>
+                      <Text style={[styles.lessonNewDate, lesson.lessonNewDate && styles.modifiedLessonDate]}>Date après modification: {new Date(lesson.lessonNewDate).toLocaleDateString()} {new Date(lesson.lessonNewDate).toLocaleTimeString()}</Text>
+                      <TouchableOpacity onPress={() => deleteNewDate(lesson.id)}>
+                        <Text style={styles.deleteButton}>Supprimer le changement d'horaire</Text>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                }
+                return null;
+              })}
+              {lessons.length === 0 || !lessons.some((lesson) => lesson.lessonNewDate !== null) && (
+                <Text style={styles.noLessonsText}>Aucune modification pour l'instant</Text>
+              )}
+            </View>
           )}
         </ScrollView>
       </View>
     </View>
-  );  
+  );
+  
+  
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -96,7 +113,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 2,
     elevation: 5,
-    marginTop: 150, // Ajout de la marge supérieure pour le header
+    marginTop: 150,
     marginBottom: 110
   },
   header: {
@@ -169,6 +186,11 @@ const styles = StyleSheet.create({
     color: 'red',
     textDecorationLine: 'underline',
   },
+  noLessonsText:{
+    margin: 10,
+    fontSize: 16,
+
+  }
 });
 
 export default HistoryPage;
